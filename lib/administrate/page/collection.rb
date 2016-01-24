@@ -21,11 +21,6 @@ module Administrate
         ordered_by?(attr) && order.direction
       end
 
-      # #scope_groups adds the concept of "group of scopes" that let us manage
-      # them always in groups based on the content of COLLECTION_SCOPES:
-      #  - if it's empty it returns an empty array indicating no groups
-      #  - if it's an array it returns an array w/ one group called :scopes
-      #  - if it's a hash it returns its keys
       def scope_groups
         if dashboard.collection_scopes.is_a?(Hash)
           dashboard.collection_scopes.keys
@@ -34,19 +29,58 @@ module Administrate
         end
       end
 
-      # #scope_names returns an array with the names of the valid scopes that
-      # can be searched in the Dashboard's index page to filter its results:
-      # - If COLLECTION_SCOPES is a hash **the group parameter is required** and
-      # the array of scopes with that key will be returned (NOTICE that **the
-      # first key** of the hash will be used **if no group is sent**).
-      # - If COLLECTION_SCOPES is an array it'll be returned ignoring the group
-      # sent (for those scenarios the *group* param does't need to be sent).
       def scope_names(group = nil)
         if dashboard.collection_scopes.is_a?(Hash)
           group ||= dashboard.collection_scopes.keys.first
-          dashboard.collection_scopes[group]
+          dashboard.collection_scopes[group].map &:to_s
         else
-          dashboard.collection_scopes
+          dashboard.collection_scopes.map &:to_s
+        end
+      end
+
+      def search
+        @options[:search]
+      end
+
+      def scoped_with?(scope)
+        search.term.include? "scope:#{scope}"
+      end
+
+      # #scope_group(scope) receives an scope declared in the dashboard's
+      # collection_scopes and returns the group of the array in which is found.
+      def scope_group(scope)
+        scope_groups.detect do |group|
+          scope_names(group).include?(scope.to_s)
+        end
+      end
+
+      # #scoped_groups returns an array with the COLLECTION_SCOPES' keys (i.e.
+      # group name) which array contains a scope that is used in the current
+      # search.
+      def scoped_groups
+        search.scopes_with_arguments.map {|s| scope_group(s)}
+      end
+
+      # #current_scope_of(group) receives a key (*group*) of the
+      # collection_scopes hash (i.e. COLLECTION_SCOPES) and returns the scope
+      # used in the current search that is into its array, or nil if none.
+      def current_scope_of(group)
+        search.scopes_with_arguments.detect {|s| scope_group(s) == group}
+      end
+
+      # #term_using_scope(scope) receives an scope and adds it to the current
+      # search avoiding duplication and collision with another scope of the
+      # same group (assuming that together will give no results).
+      def term_using_scope(scope)
+        if scoped_with?(scope)
+          search.term
+        else
+          group = scope_group(scope)
+          if scoped_groups.include? group
+            search.term.sub "scope:#{current_scope_of(group)}", "scope:#{scope}"
+          else
+            "#{search.term} scope:#{scope}".strip
+          end
         end
       end
 

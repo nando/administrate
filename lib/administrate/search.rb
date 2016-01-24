@@ -4,14 +4,14 @@ require "active_support/core_ext/object/blank"
 module Administrate
   class Search
     # Only used if dashboard's COLLECTION_SCOPES is not defined
-    BLACKLISTED_WORDS = %w{destroy remove delete update create}
+    BLACKLISTED_WORDS = %w{destroy remove delete update create}.freeze
 
     attr_reader :resolver, :term, :words
 
     def initialize(resolver, term)
-      @term = term
+      @term = term.to_s.strip
       @resolver = resolver
-      @words, @scopes = words_and_scopes_of(term ? term.split : [])
+      @words, @scopes = words_and_scopes_of(@term ? @term.split : [])
     end
 
     def scopes
@@ -20,6 +20,10 @@ module Administrate
 
     def arguments
       @scopes.map(&:argument)
+    end
+
+    def scopes_with_arguments
+      @scopes.map(&:user_input)
     end
 
     def scope
@@ -79,15 +83,15 @@ module Administrate
       if term && (/scope:(?<possible_scope>.+)/i =~ term)
         obj = build_scope_ostruct(possible_scope)
         obj if resource_class.respond_to?(obj.name) &&
-            valid_scope?(possible_scope)
+               valid_scope?(possible_scope)
       end
     end
 
     def build_scope_ostruct(user_input)
       if /(?<scope_name>\w+)\((?<argument>\w+)\)/ =~ user_input
-        OpenStruct.new(name: scope_name, argument: argument)
+        OpenStruct.new(user_input: user_input, name: scope_name, argument: argument)
       else
-        OpenStruct.new(name: user_input, argument: nil)
+        OpenStruct.new(user_input: user_input, name: user_input, argument: nil)
       end
     end
 

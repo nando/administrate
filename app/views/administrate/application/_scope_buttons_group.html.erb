@@ -1,0 +1,10 @@
+<div class="buttons-group">
+  <%= scope_buttons_group.to_s.capitalize %>:
+  <% page.scope_names(scope_buttons_group).each do |scope| %>
+    <% if page.scoped_with?(scope) %>
+      <span class="active"><%= scope %></span>
+    <% else %>
+      <%= link_to scope, {search: page.term_using_scope(scope)}, class: "button" %>
+    <% end %>
+  <% end %>
+</div>
