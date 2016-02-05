@@ -23,6 +23,14 @@ module Administrate
         @resource_name ||= resource_model_name.underscore
       end
 
+      def alternative_views
+        if dashboard.class.const_defined?(:ALTERNATIVE_VIEWS)
+          dashboard.class.const_get(:ALTERNATIVE_VIEWS)
+        else
+          {}
+        end
+      end
+
       protected
 
       def locale_title
