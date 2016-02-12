@@ -57,5 +57,9 @@ module Administrate
              scope: SCOPES_LOCALE_SCOPE + [resource_name],
              default: I18n.t(key, scope: SCOPES_LOCALE_SCOPE)
     end
+
+    def default_locale?
+      I18n.default_locale == I18n.locale
+    end
   end
 end
