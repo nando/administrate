@@ -29,6 +29,7 @@ module Administrate
         else
           {}
         end
+      end
 
       # page.with_other_locales { |locale, resource| [...] }
       def with_other_locales(resource = nil)
