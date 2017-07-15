@@ -144,10 +144,6 @@ describe Administrate::Search do
       end
 
       describe "with COLLECTION_SCOPES defined as an array" do
-        let(:resolver) do
-          double(resource_class: User,
-                 dashboard_class: DashboardWithAnArrayOfScopes)
-        end
 
         it "ignores the scope if it isn't included in COLLECTION_SCOPES" do
           begin
@@ -202,6 +198,61 @@ describe Administrate::Search do
         end
       end
 
+      # Folloing are the same previous specs using a Hash instead of an array.
+      describe "with COLLECTION_SCOPES defined as a hash of arrays w/ scopes" do
+
+        it "ignores the scope if it isn't included in COLLECTION_SCOPES keys" do
+          begin
+            class User < ActiveRecord::Base
+              def self.closed; end
+            end
+            scoped_object = User.default_scoped
+            search = Administrate::Search.new(scoped_object,
+                                              DashboardWithAHashOfScopes,
+                                              "scope:closed")
+            expect(search.scope).to eq(nil)
+          ensure
+            remove_constants :User
+          end
+        end
+
+        it "returns the scope if it's included into COLLECION_SCOPES keys" do
+          begin
+            class User < ActiveRecord::Base
+              def self.active; end
+            end
+            scoped_object = User.default_scoped
+            search = Administrate::Search.new(scoped_object,
+                                              DashboardWithAHashOfScopes,
+                                              "scope:active")
+            expect(search.scope).to eq("active")
+          ensure
+            remove_constants :User
+          end
+        end
+
+        # The following should match with what is declared by COLLECTION_SCOPES
+        # up within the DashboardWithAHashOfScopes class.
+        let(:scope) { "with_argument" }
+        let(:argument) { "3" }
+        let(:scope_with_argument) { "#{scope}(#{argument})" }
+        it "returns the scope even if its key has an argument" do
+          begin
+            class User < ActiveRecord::Base
+              def self.with_argument(argument); argument; end
+            end
+            scoped_object = User.default_scoped
+            search = Administrate::Search.new(scoped_object,
+                                              DashboardWithAHashOfScopes,
+                                              "scope:#{scope_with_argument}")
+            expect(search.scope).to eq(scope)
+            expect(search.scopes).to eq([scope])
+            expect(search.arguments).to eq([argument])
+          ensure
+            remove_constants :User
+          end
+        end
+      end
 
 
 
