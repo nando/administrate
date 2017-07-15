@@ -6,7 +6,7 @@ require "administrate/field/number"
 require "administrate/search"
 
 # I use the following line to run "rspec spec/lib/administrate/search_spec.rb"
-#require File.expand_path("../../../example_app/config/environment", __FILE__)
+require File.expand_path("../../../example_app/config/environment", __FILE__)
 
 class MockDashboard
   ATTRIBUTE_TYPES = {
@@ -253,10 +253,36 @@ describe Administrate::Search do
           end
         end
       end
+    end
+
+    describe "the query is a word and a scope" do
+      let(:word) { "foobar" }
+
+      it "returns the scope and #words the word" do
+        begin
+          class User < ActiveRecord::Base
+            def self.active; end
+          end
+          scoped_object = User.default_scoped
+          search = Administrate::Search.new(scoped_object,
+                                            MockDashboard,
+                                            "scope:#{scope} #{word}")
+          expect(search.scope).to eq(scope)
+          expect(search.words).to eq([word])
+        ensure
+          remove_constants :User
+        end
+      end
+
+
+
+
+
 
 
 
     end
+
   end
 
   describe "#run" do

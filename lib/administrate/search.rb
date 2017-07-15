@@ -6,6 +6,8 @@ module Administrate
     # Only used if dashboard's COLLECTION_SCOPES is not defined
     BLACKLISTED_WORDS = %w{destroy remove delete update create}.freeze
 
+    attr_reader :term, :words
+
     def initialize(scoped_resource, dashboard_class, term)
       @dashboard_class = dashboard_class
       @scoped_resource = scoped_resource
@@ -149,9 +151,5 @@ module Administrate
       end
     end
 
-
-
-
-    attr_reader :resolver, :term, :words
   end
 end
