@@ -274,6 +274,21 @@ describe Administrate::Search do
         end
       end
 
+      it "the order doesn't matter" do
+        begin
+          class User < ActiveRecord::Base
+            def self.active; end
+          end
+          scoped_object = User.default_scoped
+          search = Administrate::Search.new(scoped_object,
+                                            MockDashboard,
+                                            "#{word} scope:#{scope}")
+          expect(search.scope).to eq(scope)
+          expect(search.words).to eq([word])
+        ensure
+          remove_constants :User
+        end
+      end
 
 
 
