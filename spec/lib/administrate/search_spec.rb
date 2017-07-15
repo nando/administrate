@@ -143,7 +143,43 @@ describe Administrate::Search do
         end
       end
 
+      describe "with COLLECTION_SCOPES defined as an array" do
+        let(:resolver) do
+          double(resource_class: User,
+                 dashboard_class: DashboardWithAnArrayOfScopes)
+        end
 
+        it "ignores the scope if it isn't included in COLLECTION_SCOPES" do
+          begin
+            class User < ActiveRecord::Base
+              def self.closed; end
+            end
+            scoped_object = User.default_scoped
+            search = Administrate::Search.new(scoped_object,
+                                              DashboardWithAnArrayOfScopes,
+                                              "scope:closed")
+            expect(search.scope).to eq(nil)
+          ensure
+            remove_constants :User
+          end
+        end
+
+        it "returns the scope if it's included into COLLECION_SCOPES" do
+          begin
+            class User < ActiveRecord::Base
+              def self.active; end
+            end
+            scoped_object = User.default_scoped
+            search = Administrate::Search.new(scoped_object,
+                                              DashboardWithAnArrayOfScopes,
+                                              "scope:active")
+            expect(search.scope).to eq("active")
+          ensure
+            remove_constants :User
+          end
+        end
+
+      end
 
 
 
