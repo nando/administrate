@@ -179,6 +179,27 @@ describe Administrate::Search do
           end
         end
 
+        # The following should match with what is declared by COLLECTION_SCOPES
+        # up within the DashboardWithAnArrayOfScopes class.
+        let(:scope) { "with_argument" }
+        let(:argument) { "3" }
+        let(:scope_with_argument) { "#{scope}(#{argument})" }
+        it "returns the scope even if its key has an argument" do
+          begin
+            class User < ActiveRecord::Base
+              def self.with_argument(argument); argument; end
+            end
+            scoped_object = User.default_scoped
+            search = Administrate::Search.new(scoped_object,
+                                              DashboardWithAnArrayOfScopes,
+                                              "scope:#{scope_with_argument}")
+            expect(search.scope).to eq(scope)
+            expect(search.scopes).to eq([scope])
+            expect(search.arguments).to eq([argument])
+          ensure
+            remove_constants :User
+          end
+        end
       end
 
 
