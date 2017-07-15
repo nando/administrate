@@ -5,6 +5,9 @@ require "administrate/field/email"
 require "administrate/field/number"
 require "administrate/search"
 
+# I use the following line to run "rspec spec/lib/administrate/search_spec.rb"
+#require File.expand_path("../../../example_app/config/environment", __FILE__)
+
 class MockDashboard
   ATTRIBUTE_TYPES = {
     name: Administrate::Field::String,
@@ -13,7 +16,141 @@ class MockDashboard
   }
 end
 
+class DashboardWithAnArrayOfScopes
+  ATTRIBUTE_TYPES = {
+    name: Administrate::Field::String,
+  }
+
+  COLLECTION_SCOPES = [:active, :old, "with_argument(3)", "idle"]
+end
+
+class DashboardWithAHashOfScopes
+  ATTRIBUTE_TYPES = {
+    name: Administrate::Field::String,
+  }
+
+  COLLECTION_SCOPES = {
+    status: [:active, :inactive, "idle", "with_argument:*"],
+    other: [:last_week, :old, "with_argument(3)",],
+  }
+end
+
+class DashboardWithScopesDisabled
+  ATTRIBUTE_TYPES = {
+    name: Administrate::Field::String,
+  }
+
+  COLLECTION_SCOPES = []
+end
+
 describe Administrate::Search do
+
+  describe "#scopes (and #scope as #scopes.first)" do
+    let(:scope) { "active" }
+
+    describe "the query is one scope" do
+      let(:query) { "scope:#{scope}" }
+
+      it "returns nil if the model does not respond to the possible scope" do
+        begin
+          class User < ActiveRecord::Base; end
+          scoped_object = User.default_scoped
+          search = Administrate::Search.new(scoped_object,
+                                            MockDashboard,
+                                            nil)
+          expect(search.scope).to eq(nil)
+        ensure
+          remove_constants :User
+        end
+      end
+
+      it "returns the scope if the model responds to it" do
+        begin
+          class User < ActiveRecord::Base
+            def self.active; end
+          end
+          scoped_object = User.default_scoped
+          search = Administrate::Search.new(scoped_object,
+                                            MockDashboard,
+                                            query)
+          expect(search.scope).to eq(scope)
+        ensure
+          remove_constants :User
+        end
+      end
+
+      # DashboardWithScopesDisabled define COLLECTION_SCOPES as an empty array.
+      it "returns nil if the dashboard's search into scopes is disabled" do
+        begin
+          class User < ActiveRecord::Base
+            def self.active; end
+          end
+          scoped_object = User.default_scoped
+          search = Administrate::Search.new(scoped_object,
+                                            DashboardWithScopesDisabled,
+                                            query)
+          expect(search.scope).to eq(nil)
+        ensure
+          remove_constants :User
+        end
+      end
+
+      it "ignores the case of the 'scope:' prefix" do
+        begin
+          class User < ActiveRecord::Base
+            def self.active; end
+          end
+          scoped_object = User.default_scoped
+          search = Administrate::Search.new(scoped_object,
+                                            MockDashboard,
+                                            "ScoPE:#{scope}")
+          expect(search.scope).to eq(scope)
+        ensure
+          remove_constants :User
+        end
+      end
+
+      it "returns nil if the name of the scope looks suspicious" do
+        begin
+          class User < ActiveRecord::Base
+            def self.destroy_all; end
+          end
+          scoped_object = User.default_scoped
+          Administrate::Search::BLACKLISTED_WORDS.each do |word|
+            search = Administrate::Search.new(scoped_object,
+                                              MockDashboard,
+                                              "scope:#{word}_all")
+            expect(search.scope).to eq(nil)
+          end
+        ensure
+          remove_constants :User
+        end
+      end
+
+      it "returns nil if the name of the scope ends with an exclamation mark" do
+        begin
+          class User < ActiveRecord::Base
+            def self.bang!; end
+          end
+
+          scoped_object = User.default_scoped
+          search = Administrate::Search.new(scoped_object,
+                                            MockDashboard,
+                                            "scope:bang!")
+          expect(search.scope).to eq(nil)
+        ensure
+          remove_constants :User
+        end
+      end
+
+
+
+
+
+
+    end
+  end
+
   describe "#run" do
     it "returns all records when no search term" do
       begin
