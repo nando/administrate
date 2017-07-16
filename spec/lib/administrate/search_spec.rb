@@ -372,6 +372,46 @@ describe Administrate::Search do
       end
     end
 
+    describe "the query contains a 'wildcarded' scope" do
+      let(:scope) { "name_starts_with" }
+      let(:argument) { "A" }
+      let(:query) { "#{scope}:#{argument}" }
+
+      it "returns the [scope] and #arguments the [argument] *if configured*" do
+        begin
+          class User < ActiveRecord::Base
+            def self.name_starts_with(_letter); end
+          end
+          scoped_object = User.default_scoped
+          search = Administrate::Search.new(scoped_object,
+                                            MockDashboard,
+                                            query)
+          expect(search.scopes).to eq([scope])
+          expect(search.arguments).to eq([argument])
+        ensure
+          remove_constants :User
+        end
+      end
+
+      describe "without the wildcard in the dashboard configuration" do
+        it "returns an empty array" do
+          begin
+            class User < ActiveRecord::Base
+              def self.name_starts_with(_letter); end
+            end
+            scoped_object = User.default_scoped
+            search = Administrate::Search.new(scoped_object,
+                                              DashboardWithAnArrayOfScopes,
+                                              query)
+            expect(search.scopes).to eq([])
+            expect(search.arguments).to eq([])
+          ensure
+            remove_constants :User
+          end
+        end
+      end
+
+    end
   end
 
   describe "#run" do
