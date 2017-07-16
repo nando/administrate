@@ -289,13 +289,81 @@ describe Administrate::Search do
           remove_constants :User
         end
       end
+    end
 
+    describe "the query is a word and two scopes" do
+      let(:word) { "foobar" }
+      let(:other_scope) { "subscribed" }
 
+      describe "in that order" do
+        let(:query) { "#{word} scope:#{scope} scope:#{other_scope}" }
 
+        it "returns the scopes and #words the word" do
+          begin
+            class User < ActiveRecord::Base
+              def self.active; end
 
+              def self.subscribed; end
+            end
 
+            scoped_object = User.default_scoped
+            search = Administrate::Search.new(scoped_object,
+                                              MockDashboard,
+                                              query)
+ 
+            expect(search.scopes).to eq([scope, other_scope])
+            expect(search.words).to eq([word])
+          ensure
+            remove_constants :User
+          end
+        end
+      end
 
+      describe "with the word at the end" do
+        let(:query) { "scope:#{scope} scope:#{other_scope} #{word}" }
 
+        it "returns the scopes and #words the word" do
+          begin
+            class User < ActiveRecord::Base
+              def self.active; end
+
+              def self.subscribed; end
+            end
+            scoped_object = User.default_scoped
+            search = Administrate::Search.new(scoped_object,
+                                              MockDashboard,
+                                              query)
+
+            expect(search.scopes).to eq([scope, other_scope])
+            expect(search.words).to eq([word])
+          ensure
+            remove_constants :User
+          end
+        end
+      end
+
+      describe "with the word between the two scopes" do
+        let(:query) { "scope:#{scope} #{word} scope:#{other_scope}" }
+
+        it "returns the scopes and #words the word" do
+          begin
+            class User < ActiveRecord::Base
+              def self.active; end
+
+              def self.subscribed; end
+            end
+            scoped_object = User.default_scoped
+            search = Administrate::Search.new(scoped_object,
+                                              MockDashboard,
+                                              query)
+
+            expect(search.scopes).to eq([scope, other_scope])
+            expect(search.words).to eq([word])
+          ensure
+            remove_constants :User
+          end
+        end
+      end
     end
 
   end
