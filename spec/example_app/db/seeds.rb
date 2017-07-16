@@ -10,6 +10,8 @@ LineItem.destroy_all
 Order.destroy_all
 Customer.destroy_all
 Product.destroy_all
+ProductMetaTag.destroy_all
+Series.destroy_all
 
 100.times do
   name = "#{Faker::Name.first_name} #{Faker::Name.last_name}"
@@ -22,6 +24,10 @@ end
 product_attributes = YAML.load_file(Rails.root.join('db/seeds/products.yml'))
 
 product_attributes.each do |attributes|
+  attributes = attributes.merge product_meta_tag_attributes: {
+    meta_title: Faker::LordOfTheRings.character,
+    meta_description: Faker::LordOfTheRings.location,
+  }
   Product.create attributes.merge(price: 20 + rand(50))
 end
 
@@ -47,3 +53,5 @@ Customer.all.each do |customer|
     end
   end
 end
+
+Series.create(name: "An example")
