@@ -305,6 +305,7 @@ describe Administrate::Search do
 
           scoped_object = User.default_scoped
 
+          # Test the three possible word positions:
           [
             "#{word} scope:#{scope} scope:#{other_scope}",
             "scope:#{scope} #{word} scope:#{other_scope}",
@@ -321,6 +322,52 @@ describe Administrate::Search do
 
         ensure
           remove_constants :User
+        end
+      end
+    end
+
+    describe "the query is one scope with an argument" do
+      let(:scope) { "name_starts_with" }
+      let(:argument) { "A" }
+      let(:query) { "scope:#{scope}(#{argument})" }
+
+      it "returns the [scope] and #arguments the [argument]" do
+        begin
+          class User < ActiveRecord::Base
+            def self.name_starts_with(_letter); end
+          end
+          scoped_object = User.default_scoped
+          search = Administrate::Search.new(scoped_object,
+                                            MockDashboard,
+                                            query)
+          expect(search.scopes).to eq([scope])
+          expect(search.arguments).to eq([argument])
+        ensure
+          remove_constants :User
+        end
+      end
+
+      describe "plus a word" do
+        let(:word) { "foobar" }
+        let(:scope_with_argument) { "#{scope}(#{argument})" }
+        let(:query) { "scope:#{scope_with_argument} #{word}" }
+
+        it "returns [scope], #arguments [argument] and #words [word]" do
+          begin
+            class User < ActiveRecord::Base
+              def self.name_starts_with(_letter); end
+            end
+            scoped_object = User.default_scoped
+            search = Administrate::Search.new(scoped_object,
+                                              MockDashboard,
+                                              query)
+            expect(search.words).to eq([word])
+            expect(search.scopes).to eq([scope])
+            expect(search.arguments).to eq([argument])
+            expect(search.scopes_with_arguments).to eq([scope_with_argument])
+          ensure
+            remove_constants :User
+          end
         end
       end
     end
