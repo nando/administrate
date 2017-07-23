@@ -44,7 +44,7 @@ feature "Search" do
 
     visit admin_customers_path
     fill_in :search, with: query
-    page.execute_script("$('.search').submit()")
+    submit_search
 
     expect(page).to have_content(subscribed_customer.name)
     expect(page).not_to have_content(other_customer.name)
@@ -59,7 +59,8 @@ feature "Search" do
 
     visit admin_customers_path
     fill_in :search, with: query
-    page.execute_script("$('.search').submit()")
+    submit_search
+
     expect(page).to have_content(customer.name)
   end
 
