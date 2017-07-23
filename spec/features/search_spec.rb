@@ -64,6 +64,34 @@ feature "Search" do
     expect(page).to have_content(customer.name)
   end
 
+  scenario "admin searches a word into a model scope", :js do
+    searching_for = "Lua"
+    query = "scope:subscribed #{searching_for}"
+    subscribed_unmathed = create(
+      :customer,
+      name: "Dan Croak",
+      email_subscriber: true)
+    subscribed_matched = create(
+      :customer,
+      name: "#{searching_for} Miaus",
+      email_subscriber: true)
+    unsubscribed_matched = create(
+      :customer,
+      name: "#{searching_for} Doe",
+      email_subscriber: false)
+
+    visit admin_customers_path
+    fill_in :search, with: query
+    submit_search
+
+    page.within("table tbody", match: :first) do
+      expect(page).to have_content(subscribed_matched.name)
+    end
+
+    expect(page).not_to have_content(subscribed_unmathed.name)
+    expect(page).not_to have_content(unsubscribed_matched.name)
+  end
+
   scenario "admin clears search" do
     query = "foo"
     mismatch = create(:customer, name: "someone")
