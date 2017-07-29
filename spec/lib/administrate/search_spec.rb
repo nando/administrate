@@ -8,41 +8,6 @@ require "administrate/search"
 # I use the following line to run "rspec spec/lib/administrate/search_spec.rb"
 require File.expand_path("../../../example_app/config/environment", __FILE__)
 
-class MockDashboard
-  ATTRIBUTE_TYPES = {
-    name: Administrate::Field::String,
-    email: Administrate::Field::Email,
-    phone: Administrate::Field::Number,
-  }
-end
-
-class DashboardWithAnArrayOfScopes
-  ATTRIBUTE_TYPES = {
-    name: Administrate::Field::String,
-  }
-
-  COLLECTION_SCOPES = [:active, :old, "with_argument(3)", "idle"]
-end
-
-class DashboardWithAHashOfScopes
-  ATTRIBUTE_TYPES = {
-    name: Administrate::Field::String,
-  }
-
-  COLLECTION_SCOPES = {
-    status: [:active, :inactive, "idle", "with_argument:*"],
-    other: [:last_week, :old, "with_argument(3)",],
-  }
-end
-
-class DashboardWithScopesDisabled
-  ATTRIBUTE_TYPES = {
-    name: Administrate::Field::String,
-  }
-
-  COLLECTION_SCOPES = []
-end
-
 describe Administrate::Search do
 
   describe "#scopes (and #scope as #scopes.first)" do
