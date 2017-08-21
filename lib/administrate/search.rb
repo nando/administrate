@@ -35,11 +35,28 @@ module Administrate
       if @term.blank?
         @scoped_resource.all
       else
-        @scoped_resource.where(query, *search_terms)
+        resources = if @words.empty?
+                      @scoped_resource.all
+                    else
+                      @scoped_resource.where(query, *search_terms)
+                    end
+
+        filter_with_scopes resources
       end
     end
 
     private
+
+    def filter_with_scopes(resources)
+      @scopes.each do |scope|
+        resources = if scope.argument
+                      resources.public_send scope.name, scope.argument
+                    else
+                      resources.public_send scope.name
+                    end
+      end
+      resources
+    end
 
     def query
       search_attributes.map do |attr|
