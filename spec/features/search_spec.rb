@@ -33,21 +33,27 @@ feature "Search" do
 
   scenario "admin searches using a model scope", :js do
     query = "scope:subscribed"
+    first_customer = create(
+      :customer,
+      name: "First",
+      email_subscriber: false)
     subscribed_customer = create(
       :customer,
-      name: "Dan Croak",
+      name: "Second",
       email_subscriber: true)
     other_customer = create(
       :customer,
-      name: "Foo Bar",
+      name: "Third",
       email_subscriber: false)
 
     visit admin_customers_path
     fill_in :search, with: query
     submit_search
-
-    expect(page).to have_content(subscribed_customer.name)
-    expect(page).not_to have_content(other_customer.name)
+    page.within(:xpath, '//table[@aria-labelledby="page-title"]') do
+      expect(page).not_to have_content(first_customer.name)
+      expect(page).to have_content(subscribed_customer.name)
+      expect(page).not_to have_content(other_customer.name)
+    end
   end
 
   scenario "ignores malicious scope searches", :js do
