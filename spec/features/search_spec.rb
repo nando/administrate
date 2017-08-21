@@ -67,7 +67,9 @@ feature "Search" do
     fill_in :search, with: query
     submit_search
 
-    expect(page).to have_content(customer.name)
+    page.within(:xpath, '//table[@aria-labelledby="page-title"]') do
+      expect(page).to have_content(customer.name)
+    end
   end
 
   scenario "admin searches a word into a model scope", :js do
@@ -90,12 +92,12 @@ feature "Search" do
     fill_in :search, with: query
     submit_search
 
-    page.within("table tbody", match: :first) do
+    page.within(:xpath, '//table[@aria-labelledby="page-title"]') do
       expect(page).to have_content(subscribed_matched.name)
-    end
 
-    expect(page).not_to have_content(subscribed_unmathed.name)
-    expect(page).not_to have_content(unsubscribed_matched.name)
+      expect(page).not_to have_content(subscribed_unmathed.name)
+      expect(page).not_to have_content(unsubscribed_matched.name)
+    end
   end
 
   scenario "admin searches a word inside two model scopes", :js do
@@ -124,9 +126,10 @@ feature "Search" do
     fill_in :search, with: query
     submit_search
 
-    page.within("table tbody", match: :first) do
+    page.within(:xpath, '//table[@aria-labelledby="page-title"]') do
       expect(page).to have_content(subscribed_and_old_match.name)
     end
+
     expect(page).not_to have_content(subscribed_unmathed.name)
     expect(page).not_to have_content(unsubscribed_matched.name)
     expect(page).not_to have_content(subscribed_match_but_new.name)
@@ -145,7 +148,7 @@ feature "Search" do
     fill_in :search, with: query
     submit_search
 
-    page.within("table tbody", match: :first) do
+    page.within(:xpath, '//table[@aria-labelledby="page-title"]') do
       expect(page).to have_content(match.name)
     end
     expect(page).not_to have_content(unmatch.name)
@@ -163,7 +166,7 @@ feature "Search" do
     visit admin_customers_path
     fill_in :search, with: query
     submit_search
-    page.within("table tbody", match: :first) do
+    page.within(:xpath, '//table[@aria-labelledby="page-title"]') do
       expect(page).to have_content(match.name)
     end
     expect(page).not_to have_content(unmatch.name)
